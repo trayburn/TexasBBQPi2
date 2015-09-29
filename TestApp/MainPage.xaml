@@ -14,17 +14,37 @@
 
 
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    <StackPanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
           DataContext="{StaticResource ViewModel}">
-
         
+        <TextBlock x:Name="txtBinaryString" 
+                   Margin="0" 
+                   TextWrapping="Wrap" 
+                   HorizontalAlignment="Center"
+                   Text="{Binding BinaryString}" 
+                   FontSize="92" 
+                   FontFamily="Consolas" 
+                   FontWeight="Bold"/>
+
+
+        <TextBlock x:Name="txtAdcReading" 
+                   Margin="0" 
+                   TextWrapping="Wrap" 
+                   HorizontalAlignment="Center"
+                   Text="{Binding AdcReading}" 
+                   FontSize="192" 
+                   FontFamily="Consolas" 
+                   FontWeight="Bold"/>
+
+
         <TextBlock x:Name="txtTemp" 
                    Margin="0" 
                    TextWrapping="Wrap" 
+                   HorizontalAlignment="Center"
                    Text="{Binding Temp}" 
-                   FontSize="192" VerticalAlignment="Center" HorizontalAlignment="Center" FontFamily="Consolas" FontWeight="Bold"/>
+                   FontSize="192" 
+                   FontFamily="Consolas" 
+                   FontWeight="Bold"/>
 
-
-
-    </Grid>
+    </StackPanel>
 </Page>

@@ -64,12 +64,19 @@ namespace TestApp
         private void Timer_Tick(object sender, object e)
         {
             SpiDisplay.TransferFullDuplex(writeBuffer, readBuffer);
+            ViewModel.BinaryString = $"{ToBinaryString(readBuffer[0])} {ToBinaryString(readBuffer[1])} {ToBinaryString(readBuffer[2])}";
+
             int result = readBuffer[1] & 0x07;
             result <<= 8;
             result += readBuffer[2];
             result >>= 1;
+
+            ViewModel.AdcReading = result;
+
             var temp = CalculateTemperature(result);
-            temp -= 48;
+
+            temp -= 60;
+
             ViewModel.Temp = temp;
             Debug.WriteLine($"Reading : {result} // Temp : {temp.ToString()}");
         }
@@ -89,21 +96,6 @@ namespace TestApp
             this.timer.Tick += Timer_Tick;
             this.timer.Start();
             base.OnNavigatedTo(e);
-        }
-
-        private void button_Click(object sender, RoutedEventArgs e)
-        {
-            //var adcValue = ReadADC(0, clockPin, slaveInputPin, slaveOutputPin, commandSlavePin);
-            SpiDisplay.TransferFullDuplex(writeBuffer, readBuffer);
-
-            var adcValue = readBuffer[1] & 0x0F;
-            adcValue <<= 8;
-            adcValue += readBuffer[2];
-
-            var temp = CalculateTemperature(adcValue);
-
-
-            ViewModel.Temp = temp;
         }
 
         private async Task InitSPI()
@@ -127,45 +119,6 @@ namespace TestApp
             }
         }
 
-        private int ReadADC(int adcNumber, GpioPin clock, GpioPin input, GpioPin output, GpioPin command)
-        {
-            if (adcNumber > 7 || adcNumber < 0) throw new ArgumentOutOfRangeException("adcNumber");
-
-            command.Write(GpioPinValue.High);
-            clock.Write(GpioPinValue.Low); // Start Clock low
-            command.Write(GpioPinValue.Low); // Bring CS low
-
-            int commandOut = adcNumber;
-            commandOut = commandOut | 0x18; // start bit + single-ended bit
-            commandOut = commandOut << 3; // we only need to send 5 bits here
-
-            for (int index = 0; index < 5; index++)
-            {
-                if ((commandOut & 0x80) == 128)
-                    input.Write(GpioPinValue.High);
-                else
-                    input.Write(GpioPinValue.Low);
-                commandOut = commandOut << 1;
-                clock.Write(GpioPinValue.High);
-                clock.Write(GpioPinValue.Low);
-            }
-
-            var adcOut = 0;
-            // read in one empty bit, one null bit, and 10 ADC bits
-            for (int index = 0; index < 12; index++)
-            {
-                clock.Write(GpioPinValue.High);
-                clock.Write(GpioPinValue.Low);
-                adcOut = adcOut << 1;
-                if (output.Read() == GpioPinValue.High)
-                    adcOut = adcOut | 0x1;
-            }
-
-            command.Write(GpioPinValue.High);
-            adcOut = adcOut >> 1; // first bit is 'null' so drop it
-            return adcOut;
-        }
-
         private double CalculateTemperature(int adcValue)
         {
             double volts = (adcValue * 3.3) / 1024; // calculate the voltage
@@ -184,9 +137,9 @@ namespace TestApp
             double c = 0.000000047282773d;
 
             // New values take from https://github.com/CapnBry/HeaterMeter/blob/87071885e0f6a9cca1aa6d26e1b6ebf3518c2313/openwrt/package/linkmeter/luasrc/view/linkmeter/conf.htm
-            //a = 6.6853001e-04;
-            //b = 2.2231022e-04;
-            //c = 9.9680632e-08;
+            //double a = 6.6853001e-04;
+            //double b = 2.2231022e-04;
+            //double c = 9.9680632e-08;
 
             // Steinhart Hart Equation
             // T = 1/(a + b[ln(ohm)] + c[ln(ohm)]^3)
@@ -206,49 +159,10 @@ namespace TestApp
 
             return tempf;
         }
-
-
-        //private void SetupPins()
-        //{
-        //    var controller = GpioController.GetDefault();
-
-        //    controller.TryOpenPin(clockPinNumber, GpioSharingMode.Exclusive, out clockPin, out clockPinStatus);
-        //    controller.TryOpenPin(slaveOutputPinNumber, GpioSharingMode.Exclusive, out slaveOutputPin, out slaveOutputPinStatus);
-        //    controller.TryOpenPin(slaveInputPinNumber, GpioSharingMode.Exclusive, out slaveInputPin, out slaveInputPinStatus);
-        //    controller.TryOpenPin(commandSlavePinNumber, GpioSharingMode.Exclusive, out commandSlavePin, out commandSlavePinStatus);
-
-        //    clockPin.SetDriveMode(GpioPinDriveMode.Output);
-        //    commandSlavePin.SetDriveMode(GpioPinDriveMode.Output);
-        //    slaveOutputPin.SetDriveMode(GpioPinDriveMode.Input);
-        //    slaveInputPin.SetDriveMode(GpioPinDriveMode.Output);
-
-
-        //    ViewModel.Clock = new PinViewModel("Clock", clockPinStatus, clockPin);
-        //    ViewModel.SlaveInput = new PinViewModel("Slave Input", slaveInputPinStatus, slaveInputPin);
-        //    ViewModel.SlaveOutput = new PinViewModel("Slave Output", slaveOutputPinStatus, slaveOutputPin);
-        //    ViewModel.CommandSlave = new PinViewModel("Command Slave", commandSlavePinStatus, commandSlavePin);
-        //}
-
-        static double LogOnePlusX(double x)
+        public string ToBinaryString(byte b)
         {
-            if (x <= -1.0)
-            {
-                string msg = String.Format("Invalid input argument: {0}", x);
-                throw new ArgumentOutOfRangeException(msg);
-            }
-
-            if (Math.Abs(x) > 1e-4)
-            {
-                // x is large enough that the obvious evaluation is OK
-                return Math.Log(1.0 + x);
-            }
-
-            // Use Taylor approx. log(1 + x) = x - x^2/2 with error roughly x^3/3
-            // Since |x| < 10^-4, |x|^3 < 10^-12, relative error less than 10^-8
-
-            return (-0.5 * x + 1.0) * x;
+            return Convert.ToString(b, 2).PadLeft(8, '0');
         }
-
 
     }
 

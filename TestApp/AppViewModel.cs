@@ -9,60 +9,45 @@ namespace TestApp
 {
     public class AppViewModel : INotifyPropertyChanged
     {
-        private double _temp;
+        private string _BinaryString;
+        private int _AdcReading;
+        private double _Temp;
         public double Temp
         {
-            get { return _temp; }
+            get { return _Temp; }
             set
             {
-                _temp = value;
+                if (_Temp == value) return;
+                _Temp = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Temp)));
             }
         }
-        private PinViewModel _slaveInput = new PinViewModel();
-        public PinViewModel SlaveInput
-        {
-            get { return _slaveInput; }
-            set
-            {
-                _slaveInput = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SlaveInput)));
-            }
-        }
 
-        private PinViewModel _slaveOutput = new PinViewModel();
-        public PinViewModel SlaveOutput
-        {
-            get { return _slaveOutput; }
-            set
-            {
-                _slaveOutput = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SlaveOutput)));
-            }
-        }
 
-        private PinViewModel _commandSlave = new PinViewModel();
-        public PinViewModel CommandSlave
+        public int AdcReading
         {
-            get { return _commandSlave; }
+            get { return _AdcReading; }
             set
             {
-                _commandSlave = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CommandSlave)));
+                if (_AdcReading == value) return;
+                _AdcReading = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AdcReading)));
             }
         }
 
 
-        private PinViewModel _clock = new PinViewModel();
-        public PinViewModel Clock
+        public string BinaryString
         {
-            get { return _clock; }
+            get { return _BinaryString; }
             set
             {
-                _clock = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Clock)));
+                if (_BinaryString == value) return;
+                _BinaryString = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(BinaryString)));
             }
         }
+        
+
 
         public event PropertyChangedEventHandler PropertyChanged;
     }
